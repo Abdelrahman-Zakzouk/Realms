@@ -9,6 +9,22 @@ def print_pause(str):
     time.sleep(0)
 
 
+def get_choice(message, valid_inputs):
+    """Gets a valid choice from the user
+
+    Args:
+        message (string): The message to display to the user
+        valid_inputs (list): A list of valid inputs
+
+    Returns:
+        string: The user's choice
+    """
+    choice = input(message).lower()
+    while choice not in valid_inputs:
+        choice = input("Please enter a valid input from: " + str(valid_inputs) + "> ")
+    return choice  # now you are sure that it is valid
+
+
 # point system for deciding the victory or defeat of the player
 def points(pts):
     global score
@@ -33,13 +49,14 @@ def decision(explanation, decision, str1, str2):
     print_pause(decision)
     while True:
         try:
-            global number
             number = int(
-                input(
-                    f"Choose the number corresponding to the decision you'd like to make.\n1: {str1}\n2: {str2}\n"
+                get_choice(
+                    f"Choose the number corresponding to the decision you'd like to make.\n1: {str1}\n2: {str2}\n",
+                    ["1", "2"],
                 )
             )
             if number in range(1, 3):
+                return number
                 break
             print("Input outside of range")
         except ValueError:
@@ -47,7 +64,7 @@ def decision(explanation, decision, str1, str2):
 
 
 # function that assigns a function to be called based on the number the user decides on
-def assign(action1, action2):
+def assign(number, action1, action2):
     match number:
         case 1:
             action1()
@@ -149,17 +166,23 @@ def dont_use_key():
 
 
 # function for restarting the game if wanted
+activate_restart = False
+
+
 def restart():
-    global answer
-    answer = ""
-    while answer not in ["y", "n"]:
-        answer = input("Do you want to restart? y/n\n").lower()
-        if answer == "n":
-            return True
-        elif answer == "y":
-            return False
-        else:
-            print("Invalid response")
+    if activate_restart:
+        global answer
+        answer = ""
+        while answer not in ["y", "n"]:
+            answer = get_choice("Do you want to restart? y/n\n", ["y", "n"])
+            if answer == "n":
+                return True
+            elif answer == "y":
+                return False
+            else:
+                print("Invalid response")
+    else:
+        return False
 
 
 # display the result in points as well as win or loss terms
@@ -172,36 +195,38 @@ def result():
 
 
 # main code, resetting some variables and calling functions to run
-while restart:
+retry = restart()
+while not retry:
     try:
         key = False
         score = 0
         intro()
-        decision(
+        number = decision(
             "You find yourself in a majestic observatory floating in space. The room is filled with enormous, rotating star charts and cosmic instruments. Glowing constellations and celestial maps are scattered around, hinting at hidden secrets.",
             "Use the ancient star map to navigate through the observatory. You see two paths: one leads through a maze of rotating star charts, and the other through a dark, narrow corridor.",
             "Path A",
             "Path B",
         )
-        assign(path_A, path_B)
-        decision(
+        assign(number, path_A, path_B)
+        number = decision(
             "After clearing the path you crossed, you meet an enigmatic sage who offers to guide you if you complete a task.",
             "",
             "Complete the Task: Assist the sage in finding a lost artifact within the maze",
             "Refuse: Attempt to continue without the sage’s help.",
         )
-        assign(complete_task, refuse_task)
+        assign(number, complete_task, refuse_task)
         print_pause(
             "You find a portal and enter it, you get teleported to the Nexus of Realities"
         )
-        decision(
+        number = decision(
             "You Arrive at the Nexus of Realities, where the energies of the realms converge. Here, you face the ultimate challenge that tests everything you’ve learned and collected.",
             "Use the celestial key to solve a complex puzzle",
             "Use key",
             "Don't use key",
         )
-        assign(use_key, dont_use_key)
+        assign(number, use_key, dont_use_key)
         result()
+        activate_restart = True
         if restart():
             break
 
